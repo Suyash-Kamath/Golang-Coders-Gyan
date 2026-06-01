@@ -124,7 +124,7 @@ func (p Payment) makePayment(amount float32) {
 // CONSTRUCTOR (optional, but idiomatic): makes the dependency mandatory
 // so a caller can't forget to set the gateway.
 // ----------------------------------------------------------------------
-func NewPayment(gw PaymentGateway) Payment {
+func NewPayment(gw Paymenter) Payment {
 	return Payment{gateway: gw}
 }
 
