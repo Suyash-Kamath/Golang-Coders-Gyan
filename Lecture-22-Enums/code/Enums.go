@@ -36,6 +36,15 @@ An enum is a fixed set of specific named values that you picked, bundled togethe
 So the statement holds: enum = your hand-picked, named, fixed set of values, unified under one data type.
 
 
+OrderStatus has int as its underlying type — so it stores an integer and behaves like one in terms of representation. In that sense, yes, it's "an int with a different name."
+But it's a distinct type, not literally int. Go treats them as separate:
+govar a int = 5
+var b OrderStatus = 5
+
+a = b   // ❌ won't compile — different types
+a = int(b)  // ✅ needs explicit conversion
+So: same underlying representation as int, but a separate type that the compiler won't mix with plain int. That separateness is the whole point — it's what stops you from passing a random int where an OrderStatus is expected.
+
 */
 package main
 import "fmt"
