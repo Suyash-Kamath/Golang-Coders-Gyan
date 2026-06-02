@@ -28,6 +28,14 @@ So: enum = a data type whose values are a fixed, discrete set of named options y
 An enum is a fixed set of specific named values that you picked, bundled together as a data type. Only those values are valid for that type — nothing else.
 
 
+"a fixed set" — once defined, the list is locked: exactly Received, Confirmed, Delivered. No more, no fewer (unless you edit the code).
+"specific named values" — each option has a name (Received, not just a bare 0). They're specific picks, not a range.
+"that you picked" — you chose these three. The language didn't; you decided what's valid.
+"bundled together as a data type" — they all share one type, OrderStatus. That type is what ties them into a single group.
+"only those values are valid — nothing else" — a variable of type OrderStatus is meant to hold one of those three. changeOrderStatus(Confirmed) works; passing a random string or unrelated value doesn't fit the type.
+So the statement holds: enum = your hand-picked, named, fixed set of values, unified under one data type.
+
+
 */
 package main
 import "fmt"
