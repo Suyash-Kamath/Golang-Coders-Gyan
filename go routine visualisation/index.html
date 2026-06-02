@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Go Routine Visualisation</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Golang concurrency visualizer</p>
+          <h1>Go Routine Visualisation</h1>
+          <p class="byline">
+            Built by <strong>Suyash Kamath</strong>
+            <a
+              class="linkedin-link"
+              href="https://www.linkedin.com/in/suyash-kamath-1ba50a230/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Suyash Kamath on LinkedIn"
+              title="Connect on LinkedIn"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  fill="currentColor"
+                  d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"
+                />
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </p>
+        </div>
+        <div class="status-strip" aria-label="Simulation status">
+          <span id="stepCounter">Step 1 of 1</span>
+          <span id="runtimeClock">t = 0ms</span>
+          <span id="activeScenario">Scenario</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="control-panel" aria-label="Controls">
+          <label class="field">
+            <span>Scenario</span>
+            <select id="scenarioSelect"></select>
+          </label>
+
+          <div class="button-row">
+            <button id="resetBtn" type="button" title="Reset simulation">
+              <span aria-hidden="true">R</span>
+              Reset
+            </button>
+            <button id="prevBtn" type="button" title="Previous step">
+              <span aria-hidden="true">&lt;</span>
+              Prev
+            </button>
+            <button id="stepBtn" type="button" title="Next step">
+              <span aria-hidden="true">&gt;</span>
+              Step
+            </button>
+            <button id="playBtn" type="button" class="primary" title="Play or pause">
+              <span aria-hidden="true">P</span>
+              Play
+            </button>
+          </div>
+
+          <label class="field speed-field">
+            <span>Speed <small>(left = slow, right = fast)</small></span>
+            <input id="speedRange" type="range" min="450" max="1800" step="150" value="1300" />
+          </label>
+        </section>
+
+        <section class="code-panel" aria-label="Go code">
+          <div class="section-title">
+            <h2>Code</h2>
+            <span id="codeHint">Current line is highlighted</span>
+          </div>
+          <pre id="codeBlock" class="code-block"></pre>
+        </section>
+
+        <section class="visual-panel" aria-label="Runtime visualisation">
+          <div class="section-title">
+            <h2>Runtime</h2>
+            <span id="stepTitle">Step title</span>
+          </div>
+
+          <div class="runtime-grid">
+            <div class="lane-panel">
+              <div class="lane-title">Goroutines</div>
+              <div id="goroutineLanes" class="goroutine-lanes"></div>
+            </div>
+
+            <div class="scheduler-panel">
+              <div class="lane-title">Scheduler: G, M, P model</div>
+              <div id="schedulerBoard" class="scheduler-board"></div>
+            </div>
+
+            <div class="channel-panel">
+              <div class="lane-title">Channels, timers, waits</div>
+              <div id="channelBoard" class="channel-board"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="explain-panel" aria-label="Explanation">
+          <div class="section-title">
+            <h2>What is happening</h2>
+            <span id="currentConcept">Concept</span>
+          </div>
+          <p id="stepExplanation"></p>
+          <div id="conceptChips" class="concept-chips"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
