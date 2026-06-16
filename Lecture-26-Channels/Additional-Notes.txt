@@ -1,0 +1,14 @@
+1. Lock channel
+2. Is there a waiting sender?
+3. If yes:
+      transfer value
+      wake sender
+      continue
+   If no:
+      park G1 (block)
+4. Unlock channel
+
+
+When G1 performs a receive, the runtime first checks the channel for waiting senders or buffered data. Only if none are available does it block G1.
+
+hey rememeber if G1 and G2 are both runnable , it is responsibility of Scheduler which to run
