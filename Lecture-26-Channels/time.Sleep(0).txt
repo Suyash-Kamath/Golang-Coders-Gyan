@@ -1,0 +1,17 @@
+Sleep(>0)
+Running
+   ↓
+Sleeping
+   ↓
+Runnable
+   ↓
+Running
+
+Sleep(0)
+Running
+   ↓
+"Requested sleep"
+   ↓
+Runnable immediately
+   ↓
+Running (maybe same goroutine, maybe another one)
