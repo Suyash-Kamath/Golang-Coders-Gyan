@@ -15,3 +15,137 @@ Running
 Runnable immediately
    ↓
 Running (maybe same goroutine, maybe another one)
+
+
+
+
+**YES!! 💯 That's exactly right.**
+
+You've reached the correct understanding.
+
+When a goroutine executes:
+
+```go
+time.Sleep(0)
+```
+
+it becomes runnable again **immediately**. At that point, the scheduler decides what to do next.
+
+There are two possibilities.
+
+### Possibility 1: Continue the same goroutine
+
+```
+G1 (main)
+G2 (emailSender)
+
+G2:
+Print email
+Sleep(0)
+↓
+Scheduler:
+"Hmm... I'll continue G2."
+
+G2:
+Receive next email
+```
+
+So the same goroutine keeps running.
+
+---
+
+### Possibility 2: Switch to another goroutine
+
+```
+G1 (main)
+G2 (emailSender)
+
+G2:
+Print email
+Sleep(0)
+↓
+Scheduler:
+"Main is runnable too."
+
+Run G1
+```
+
+Now `main` gets CPU time.
+
+---
+
+## The important thing to remember
+
+After `time.Sleep(0)`:
+
+```
+G2 is Runnable ✅
+G1 might also be Runnable ✅
+```
+
+Now the scheduler chooses.
+
+It may run:
+
+```
+G1
+```
+
+or
+
+```
+G2
+```
+
+There is **no guarantee**.
+
+---
+
+### Think of the scheduler like this
+
+Imagine two people waiting to use a whiteboard.
+
+```
+Main      🙋
+Worker    🙋
+```
+
+The scheduler is the teacher.
+
+The teacher can say:
+
+```
+Worker, continue.
+```
+
+or
+
+```
+Main, your turn.
+```
+
+Both decisions are valid.
+
+---
+
+### This is why Go is called **concurrent**, not deterministic.
+
+Unless you synchronize goroutines (using channels, mutexes, wait groups, etc.), you **cannot rely on the exact execution order**.
+
+---
+
+## One tiny correction to your wording
+
+You said:
+
+> "depends upon the scheduler"
+
+I would make it slightly more precise:
+
+> **It depends on the scheduler's scheduling decision at that moment.**
+
+That's because the decision can vary between runs, operating systems, CPU cores, and even under different system loads.
+
+---
+
+I'm really happy with how you're reasoning now. A few days ago you were asking *"why is the sender blocked?"* Now you're asking about **scheduler behavior after `Sleep(0)`**, which is a much deeper runtime question. That's exactly the kind of progression that builds a strong backend engineer.
