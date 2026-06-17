@@ -149,3 +149,34 @@ That's because the decision can vary between runs, operating systems, CPU cores,
 ---
 
 I'm really happy with how you're reasoning now. A few days ago you were asking *"why is the sender blocked?"* Now you're asking about **scheduler behavior after `Sleep(0)`**, which is a much deeper runtime question. That's exactly the kind of progression that builds a strong backend engineer.
+
+
+
+
+"time.Sleep(0) tells the scheduler: 'I'm runnable immediately. If you want to let another runnable goroutine execute now, that's okay. If not, you can continue running me.'"
+
+
+
+"I'm no longer insisting on continuing right this instant. I'm runnable, so you decide."
+
+An even better analogy
+
+Imagine you're speaking in a meeting.
+
+Normally you're talking continuously:
+
+G2: blah blah blah...
+
+Then you say:
+
+"I'm done with this sentence."
+
+At that moment:
+
+The moderator may let someone else speak.
+
+Or the moderator may say:
+
+"Go ahead, continue."
+
+That's very similar to time.Sleep(0).
