@@ -1,0 +1,179 @@
+HAHA 😂 This is exactly the kind of question that computer architects ask.
+
+You're basically asking:
+
+> **"What if all 8 goroutines arrive at exactly the same instant?"**
+
+The answer is:
+
+> **In reality, there is no such thing as "exactly the same" from the mutex's point of view.**
+
+Let's see why.
+
+---
+
+## Imagine 8 CPU cores
+
+```
+Core1 → G1
+Core2 → G2
+Core3 → G3
+...
+Core8 → G8
+```
+
+All execute
+
+```go
+p.mu.Lock()
+```
+
+at what appears to be
+
+```
+6.67 ns
+```
+
+---
+
+## Inside the CPU
+
+A mutex isn't magic.
+
+Internally, it uses **atomic CPU instructions** (hardware-supported operations).
+
+Conceptually, the mutex has a state:
+
+```
+locked = 0   // unlocked
+locked = 1   // locked
+```
+
+Each goroutine tries to do something conceptually like:
+
+```
+if locked == 0 {
+    locked = 1
+    // I got the lock!
+}
+```
+
+But **this is NOT done as two separate operations**.
+
+Instead, the CPU provides an **atomic** instruction that means:
+
+> "Check if it's 0 and change it to 1 as one indivisible operation."
+
+---
+
+## Suppose all 8 try simultaneously
+
+```
+G1 ─┐
+G2 ─┤
+G3 ─┤
+G4 ─┤──> Atomic Lock
+G5 ─┤
+G6 ─┤
+G7 ─┤
+G8 ─┘
+```
+
+The CPU and its memory subsystem serialize these atomic operations.
+
+Only **one** atomic operation succeeds.
+
+For example:
+
+```
+G5 succeeds
+
+locked: 0 → 1
+```
+
+The others see:
+
+```
+locked == 1
+```
+
+So they fail and block.
+
+---
+
+## Who wins?
+
+You don't know.
+
+Maybe G1.
+
+Maybe G8.
+
+Maybe G5.
+
+It depends on extremely low-level things like:
+
+* CPU cache timing
+* Memory bus arbitration
+* The Go scheduler
+* The operating system scheduler
+
+These happen at a level far below your Go program.
+
+---
+
+## Think of a bank locker
+
+Eight people all press the locker handle at what they think is the exact same instant.
+
+Physically, the lock mechanism still processes **one attempt first**.
+
+That person gets in.
+
+Everyone else finds the door already locked.
+
+---
+
+## The important idea
+
+Even if, from your perspective,
+
+```
+All arrived at 6.67 ns
+```
+
+the hardware never treats all eight lock acquisitions as happening simultaneously.
+
+Atomic operations establish a **single global order** for that memory location.
+
+So it becomes something like:
+
+```
+G5 won
+G2 lost
+G8 lost
+G1 lost
+...
+```
+
+---
+
+### This is why atomic instructions exist
+
+Without atomic instructions, a mutex itself would suffer from race conditions!
+
+So the hierarchy is:
+
+```
+Your Go code
+       ↓
+sync.Mutex
+       ↓
+Go runtime
+       ↓
+CPU atomic instructions (Compare-And-Swap, Exchange, etc.)
+       ↓
+Hardware guarantees only one winner
+```
+
+That's why `sync.Mutex` is reliable even when many goroutines on many CPU cores try to lock it "at the same time." The hardware ensures there is always exactly one successful acquisition.
