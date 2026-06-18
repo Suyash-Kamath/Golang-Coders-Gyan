@@ -781,3 +781,227 @@ even though the execution order might be completely different every run.
 ---
 
 You're asking exactly the kinds of questions that build a solid understanding of concurrency. These "what if they all arrive at the same time?" scenarios are the right way to think about synchronization.
+
+
+
+
+
+YES!! 🔥 You're now asking about what happens **under the hood**. Let's go deeper.
+
+## Short answer
+
+**Yes.**
+
+The fast path of Go's `sync.Mutex` **uses atomic Compare-And-Swap (CAS)** internally.
+
+(If there's heavy contention, it eventually uses more sophisticated mechanisms and may block goroutines instead of spinning.)
+
+---
+
+## Imagine this mutex
+
+```go
+var mu sync.Mutex
+```
+
+Initially:
+
+```text
+locked = false
+```
+
+Now 8 goroutines execute:
+
+```go
+mu.Lock()
+```
+
+at **exactly the same instant**.
+
+---
+
+## Internally (conceptually)
+
+Each goroutine does something like:
+
+```go
+if CAS(&locked, false, true) {
+    // I acquired the lock!
+} else {
+    // Someone else already has it.
+}
+```
+
+Where CAS means:
+
+```text
+Compare current value
+
+if current == expected
+    replace with new value
+    return true
+
+else
+    return false
+```
+
+---
+
+## Now suppose
+
+Initially
+
+```text
+locked = false
+```
+
+Eight goroutines execute
+
+```text
+CAS(false -> true)
+```
+
+simultaneously.
+
+---
+
+## What happens?
+
+The CPU guarantees that **only one CAS succeeds**.
+
+For example:
+
+```
+G1  ----\
+G2  -----\
+G3  ------\
+G4  -------\
+
+          CAS
+
+G5  -------/
+G6  ------/
+G7  -----/
+G8  ----/
+```
+
+Maybe G5 wins.
+
+Then memory becomes
+
+```text
+locked = true
+```
+
+Now every other CAS checks
+
+```text
+Is locked == false?
+```
+
+No.
+
+It's already
+
+```text
+true
+```
+
+So they all fail.
+
+---
+
+## Your question:
+
+> CPU will select any one of the 8, right?
+
+### YES. Exactly.
+
+There is **no special priority** like "the first goroutine created wins."
+
+It could be
+
+* G1
+* G8
+* G4
+* G2
+
+**Any one** can win.
+
+The winner depends on tiny timing differences, CPU scheduling, cache coherence, and other hardware details.
+
+The important guarantee is:
+
+> **Exactly one** succeeds.
+
+Not:
+
+> **Which one** succeeds.
+
+---
+
+## What happens to the other 7?
+
+They don't disappear.
+
+They see that the lock is already taken.
+
+Then Go's mutex implementation may:
+
+1. Spin briefly (busy-wait) if it thinks the lock will be released soon.
+2. If the lock is still unavailable, park (sleep) the goroutine.
+3. When the mutex is unlocked, Go wakes one waiting goroutine, which then tries to acquire the lock again.
+
+---
+
+## Visual timeline
+
+```
+Time = 0
+
+locked = false
+
+      G1  CAS(false,true)
+      G2  CAS(false,true)
+      G3  CAS(false,true)
+      G4  CAS(false,true)
+      G5  CAS(false,true)
+      G6  CAS(false,true)
+      G7  CAS(false,true)
+      G8  CAS(false,true)
+
+                │
+                ▼
+
+CPU executes ONE CAS first
+
+Suppose G6 wins
+
+locked = true
+
+G6 ---> enters critical section
+
+G1 -> CAS fails
+G2 -> CAS fails
+G3 -> CAS fails
+G4 -> CAS fails
+G5 -> CAS fails
+G7 -> CAS fails
+G8 -> CAS fails
+```
+
+---
+
+### One small clarification
+
+When people say "the CPU selects one," that's a useful mental model, but the reality is slightly more nuanced. The CPU hardware and its cache-coherence protocol make the **atomic CAS instruction** behave as if only one thread/goroutine successfully changed the value. The Go scheduler decides which goroutines get CPU time, but **the atomic instruction itself guarantees that only one CAS succeeds** when they race on the same memory location.
+
+So your understanding is correct:
+
+* ✅ 8 goroutines call `Lock()` at the same time.
+* ✅ They all attempt a CAS on the mutex state.
+* ✅ Only one CAS succeeds.
+* ✅ Which goroutine wins is **not deterministic**.
+* ✅ The others fail the CAS and wait (spin briefly or sleep, depending on the mutex implementation).
+
+You're now learning the same concepts that operating systems and database engineers rely on every day.
