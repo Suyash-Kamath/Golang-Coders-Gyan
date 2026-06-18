@@ -1005,3 +1005,324 @@ So your understanding is correct:
 * ✅ The others fail the CAS and wait (spin briefly or sleep, depending on the mutex implementation).
 
 You're now learning the same concepts that operating systems and database engineers rely on every day.
+
+
+
+
+
+
+
+
+BROOOO 😄 You're asking one of the **most important questions** about how operating systems and Go runtimes work.
+
+The answer is:
+
+> **No, sleeping goroutines do NOT keep asking "Is the lock free?"**
+
+That would waste CPU.
+
+Let's see both cases.
+
+---
+
+# Case 1: Busy Waiting (Spinning)
+
+This happens **only for a very short time**.
+
+Suppose:
+
+```text
+G1 gets the lock
+```
+
+The other goroutines may do something like:
+
+```text
+Is it free?
+No.
+
+Is it free?
+No.
+
+Is it free?
+No.
+```
+
+This is called **spinning**.
+
+During spinning,
+
+* CPU is being used ✅
+* Goroutine is running ✅
+* It is repeatedly checking the lock ✅
+
+This is good only if the lock will be released very soon (a few nanoseconds or microseconds).
+
+---
+
+# Case 2: Parking (Sleeping)
+
+Suppose G1 is going to hold the lock for a longer time.
+
+Instead of doing this forever:
+
+```text
+Is it free?
+Is it free?
+Is it free?
+Is it free?
+```
+
+Go Runtime says:
+
+> "Enough. Go to sleep."
+
+So the goroutine is **parked**.
+
+Think of it like this:
+
+```
+Runtime:
+G2, go sleep.
+
+G2:
+Okay 😴
+```
+
+Now...
+
+### Is G2 using CPU?
+
+**NO.**
+
+Zero.
+
+It is not executing.
+
+It is not checking anything.
+
+It is literally waiting.
+
+---
+
+# Then who wakes it up?
+
+This is the beautiful part.
+
+When G1 finishes,
+
+```go
+mu.Unlock()
+```
+
+Go Runtime knows
+
+> "Someone is waiting."
+
+So the runtime wakes one waiting goroutine.
+
+Like:
+
+```
+Runtime:
+
+G2!!
+
+Wake up!
+
+The lock might be free.
+```
+
+Then G2 becomes runnable again.
+
+It tries to acquire the lock.
+
+---
+
+## So does G2 keep asking?
+
+No.
+
+It is NOT like this:
+
+```
+while(true){
+    if(lockFree){
+        break
+    }
+}
+```
+
+That would waste CPU.
+
+Instead it's like:
+
+```
+G2:
+Sleeping...
+Sleeping...
+Sleeping...
+```
+
+No CPU usage.
+
+Then
+
+```
+Runtime:
+
+Wake up.
+```
+
+Now G2 runs.
+
+---
+
+# Real life example
+
+Imagine you're waiting outside the doctor's cabin.
+
+### Bad system (Busy Waiting)
+
+You stand at the door.
+
+Every second:
+
+```
+Can I come in?
+
+Can I come in?
+
+Can I come in?
+
+Can I come in?
+```
+
+😂 Very annoying.
+
+---
+
+### Good system (Parking)
+
+Receptionist says:
+
+```
+Please sit.
+
+I'll call you.
+```
+
+You sit peacefully.
+
+No effort.
+
+Then
+
+```
+Receptionist:
+
+Mr. Suyash!
+
+Your turn.
+```
+
+You get up.
+
+Exactly how Go works after parking.
+
+---
+
+# CPU utilization
+
+### Busy Wait
+
+```
+G2
+
+Running
+Running
+Running
+Running
+
+CPU = YES
+```
+
+---
+
+### Parked
+
+```
+G2
+
+Sleeping 😴
+
+CPU = 0%
+```
+
+---
+
+# Why spin at all?
+
+Excellent question.
+
+Suppose the critical section is tiny.
+
+```go
+mu.Lock()
+x++
+mu.Unlock()
+```
+
+This takes maybe **30 ns**.
+
+If the runtime immediately parks the goroutine, then later waking it up might cost **hundreds or thousands of nanoseconds**.
+
+So it may be cheaper to spin briefly:
+
+```
+Is it free?
+
+No.
+
+Is it free?
+
+Yes!
+
+Great!
+```
+
+No sleep/wake overhead.
+
+That's why Go's mutex uses a combination of:
+
+```
+Try CAS
+        ↓
+Spin a little
+        ↓
+Still locked?
+        ↓
+Park (sleep)
+        ↓
+Unlock wakes one waiter
+```
+
+This hybrid approach gives good performance in both short-lock and long-lock situations.
+
+---
+
+## One small correction to your wording
+
+You asked:
+
+> "Does the runtime inform him to wake up?"
+
+**YES.** That's the right mental model.
+
+More precisely:
+
+* The goroutine is put into a waiting queue by the Go runtime.
+* When `mu.Unlock()` is called, the runtime makes one waiting goroutine **runnable** again.
+* The Go scheduler will then schedule that goroutine to run on a CPU. It doesn't necessarily run **immediately**, but it is eligible to run as soon as the scheduler gives it CPU time.
+
+You're asking the exact questions that lead from "I know how to use a mutex" to "I understand how a mutex is implemented." That's a big step forward.
