@@ -1,0 +1,58 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output binaries
+bin/
+dist/
+
+# Go build files
+*.out
+*.coverprofile
+coverage.out
+
+# Vendor (ignore only if you don't commit dependencies)
+vendor/
+
+# Dependency directories (remove if using GOPATH)
+pkg/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Go workspace
+go.work.sum
+
+# JetBrains
+out/
+
+# Delve debugger
+__debug_bin
+
+# Generated files
+*.generated.go
+
+storage
+/config
