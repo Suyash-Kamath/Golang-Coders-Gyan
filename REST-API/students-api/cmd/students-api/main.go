@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	// "fmt"
+	// "fmt"
 	"log"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,16 @@ func main() {
 		Addr:    cfg.HTTPServer.Addr,
 		Handler: router,
 	}
+
+	// fmt.Println("Server Started")
+	// this below line is blocking call, so if there is an error in starting the server, it will be logged and the program will exit
+	// err:=server.ListenAndServe()
+	// if err != nil && err != http.ErrServerClosed {
+	// 	log.Fatalf("Failed to Start Server: %s", err.Error())
+	// }
+
+	// Production me itna simple nahi banate , iske upar aur ek chiz add karni hai which is graceful shutdown, so that when we want to stop the server, it will wait for all the ongoing requests to complete before shutting down the server,
+
 	slog.Info("Server Started at ", slog.String("address", cfg.HTTPServer.Addr))
 
 	// this is blocking call, so if there is an error in starting the server, it will be logged and the program will exit
