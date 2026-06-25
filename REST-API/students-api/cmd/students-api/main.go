@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/config"
+	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/http/handlers/student"
 )
 
 func main() {
@@ -29,9 +30,8 @@ func main() {
 	// Setup router
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to Student's API"))
-	})
+	// this is the convention of restapi , and plural rakhte hai resources ko
+	router.HandleFunc("POST /api/students",student.New())
 
 	// Setup server
 
