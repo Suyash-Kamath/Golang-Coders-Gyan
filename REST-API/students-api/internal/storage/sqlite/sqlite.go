@@ -6,10 +6,12 @@ package sqlite
 // database se kaam karnekeliye jo bhi interface hai wo provide karta hai
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/config"
+	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/types"
 	_ "github.com/mattn/go-sqlite3"
-	// Dekho, we are not using driver ka variable , bass insitialisation keliye chahiye hota hai , we are using it indirectly behind the scene , so underscore lagaayaa 
+	// Dekho, we are not using driver ka variable , bass insitialisation keliye chahiye hota hai , we are using it indirectly behind the scene , so underscore lagaayaa
 )
 
 
@@ -74,4 +76,33 @@ func (s *Sqlite) CreateStudent(name string,email string,age int) (int64,error){
 	}
 	return lastId,nil
 
+}
+
+func (s *Sqlite) GetStudentById(id int64) (types.Student,error){
+
+	// stmt,err:=s.Db.Prepare(`SELECT * FROM students WHERE id = ? LIMIT 1`)
+	stmt,err:=s.Db.Prepare(`SELECT id,name,email,age FROM students WHERE id = ? LIMIT 1`)
+	if err!=nil{
+		return types.Student{
+
+		},err
+	}
+
+	defer stmt.Close()
+
+	// data jo database se , aar aha hai , struct ke andhar serialize karke daaldo
+
+	var student types.Student
+	// Scan method database ka data , struct me dalega , kya kya scan karna hai wo batana hai , and order wise hona chahiye .
+	err=stmt.QueryRow(id).Scan(&student.Id,&student.Name,&student.Email,&student.Age)
+	if err!=nil{
+		// if no user found
+		if err == sql.ErrNoRows{
+			return types.Student{} , fmt.Errorf("No student found with id %s",fmt.Sprint(id))
+		}
+		return types.Student{},fmt.Errorf("Query error %w",err)
+	}
+
+
+	return student,nil
 }

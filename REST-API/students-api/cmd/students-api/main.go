@@ -41,7 +41,7 @@ func main() {
 	// this is the convention of restapi , and plural rakhte hai resources ko
 	router.HandleFunc("POST /api/students",student.New(storage))
 	// student.New() me hame db ko use karna hai , so as a dependency receive karna padega , so that plug in play waali hai  
-
+		router.HandleFunc("GET /api/students/{id}",student.GetById(storage))
 	// Setup server
 
 	server := &http.Server{
