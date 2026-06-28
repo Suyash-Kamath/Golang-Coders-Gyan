@@ -22,7 +22,7 @@ import (
 // we will use Storage interface , no concrete implementation , with this out system will be plug in type
 
 
-func New(storage.Storage) http.HandlerFunc{
+func New(storage storage.Storage) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		slog.Info("Creating a Student")

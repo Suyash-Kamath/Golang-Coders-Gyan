@@ -4,7 +4,7 @@ package storage
 // also during testing , we can switch it to fake database
 
 type Storage interface{
-	CreateStudent(name string,email string, age int64) (int64,error)
+	CreateStudent(name string,email string, age int) (int64,error)
 
 }
 

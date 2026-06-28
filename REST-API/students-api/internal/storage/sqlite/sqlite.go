@@ -46,7 +46,7 @@ func New(cfg *config.Config) (*Sqlite,error){
 }
 
 
-func (s *Sqlite) CreateStudent(name string,email string,age int64) (int64,error){
+func (s *Sqlite) CreateStudent(name string,email string,age int) (int64,error){
 
 	stmt,err:=s.Db.Prepare("INSERT INTO students(name,email,age) VALUES (?,?,?)")
 	// we dont pass the data directly , first we prepare the query and give the placeholder and then we bind the data , which prevenets the SQL injection attack
