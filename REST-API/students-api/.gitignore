@@ -54,5 +54,5 @@ __debug_bin
 # Generated files
 *.generated.go
 
-storage
+/storage
 /config

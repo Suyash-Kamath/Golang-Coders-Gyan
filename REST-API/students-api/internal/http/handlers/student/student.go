@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/storage"
 	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/types"
 	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/utils/response"
 	"github.com/go-playground/validator/v10"
@@ -16,7 +17,12 @@ import (
 // crud
 
 // Create/ New is convention and this func returns handler func
-func New() http.HandlerFunc{
+
+// See, how we will use storage , as discussed , Student New function hai , uske andhar database use karna hai , so as a dependency receive karna padega , this is dependency injection
+// we will use Storage interface , no concrete implementation , with this out system will be plug in type
+
+
+func New(storage.Storage) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		slog.Info("Creating a Student")
@@ -54,6 +60,20 @@ func New() http.HandlerFunc{
 			return
 		}
 
-		response.WriteJson(w, http.StatusCreated,map[string]string{"success":"OK"})
+		lastId,err:=storage.CreateStudent(
+			student.Name,
+			student.Email,
+			student.Age,
+		)
+
+		slog.Info("User Created successfully",slog.String("UserID",fmt.Sprint(lastId)))
+
+		if err!=nil{
+			response.WriteJson(w,http.StatusInternalServerError,err)
+			return
+		}	
+
+		// response.WriteJson(w, http.StatusCreated,map[string]string{"success":"OK"})
+		response.WriteJson(w, http.StatusCreated,map[string]int64{"id":lastId})
 	}
 }

@@ -14,6 +14,7 @@ import (
 
 	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/config"
 	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/http/handlers/student"
+	"github.com/Suyash-Kamath/Golang-Coders-Gyan/REST-API/students-api/internal/storage/sqlite"
 )
 
 func main() {
@@ -26,12 +27,20 @@ func main() {
 	// Custom logger is want to set
 
 	// Database setup
+	storage,err:=sqlite.New(cfg)
+	if err!=nil{
+		log.Fatal(err)
+	} // db connect nahi ho raha toh application chalake kya faayda
+
+		slog.Info("Storage initialized",slog.String("env",cfg.Env),slog.String("version","1.0.0"))
+
 
 	// Setup router
 	router := http.NewServeMux()
 
 	// this is the convention of restapi , and plural rakhte hai resources ko
-	router.HandleFunc("POST /api/students",student.New())
+	router.HandleFunc("POST /api/students",student.New(storage))
+	// student.New() me hame db ko use karna hai , so as a dependency receive karna padega , so that plug in play waali hai  
 
 	// Setup server
 
