@@ -41,10 +41,10 @@ func MustLoad() *Config {
 
 	// Fix 2 is a minor improvement — os.IsNotExist would silently pass through things like permission errors, the new version catches everything. Not a big deal in practice but cleaner.
 	// old - only catches "does not exist" errors
-    // if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	// if _, err := os.Stat(configPath); os.IsNotExist(err) {
 	//  if _,err:= os.Stat(configPath); os.IsNotExist(err){
-    //     log.Fatalf("config file does not exist at path: %s",configPath)
-    // }
+	//     log.Fatalf("config file does not exist at path: %s",configPath)
+	// }
 
 	var cfg Config
 

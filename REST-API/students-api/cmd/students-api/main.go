@@ -27,22 +27,23 @@ func main() {
 	// Custom logger is want to set
 
 	// Database setup
-	storage,err:=sqlite.New(cfg)
-	if err!=nil{
+	storage, err := sqlite.New(cfg)
+	if err != nil {
 		log.Fatal(err)
 	} // db connect nahi ho raha toh application chalake kya faayda
 
-		slog.Info("Storage initialized",slog.String("env",cfg.Env),slog.String("version","1.0.0"))
-
+	slog.Info("Storage initialized", slog.String("env", cfg.Env), slog.String("version", "1.0.0"))
 
 	// Setup router
 	router := http.NewServeMux()
 
 	// this is the convention of restapi , and plural rakhte hai resources ko
-	router.HandleFunc("POST /api/students",student.New(storage))
-	// student.New() me hame db ko use karna hai , so as a dependency receive karna padega , so that plug in play waali hai  
-	router.HandleFunc("GET /api/students/{id}",student.GetById(storage))
-	router.HandleFunc("GET /api/students",student.GetList(storage))
+	router.HandleFunc("POST /api/students", student.New(storage))
+	// student.New() me hame db ko use karna hai , so as a dependency receive karna padega , so that plug in play waali hai
+	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
+	router.HandleFunc("GET /api/students", student.GetList(storage))
+	router.HandleFunc("PUT /api/students/{id}", student.Update(storage))
+	router.HandleFunc("DELETE /api/students/{id}", student.Delete(storage))
 	// Setup server
 
 	server := &http.Server{
